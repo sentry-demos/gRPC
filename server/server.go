@@ -25,12 +25,15 @@ import (
 	"context"
 	"log"
 	"net"
+	"os"
+	"fmt"
 
 	"google.golang.org/grpc"
+	"github.com/getsentry/sentry-go"
+
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
 )
 
-// test
 const (
 	port = ":50051"
 )
@@ -40,12 +43,30 @@ type server struct{}
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
+	
+	// SENTRY
+	_, err := os.Open("fakefile.ext")
+	if err != nil {
+		log.Printf("ERROR handled")
+		sentry.CaptureException(err)
+		return &pb.HelloReply{Message: "Server ERROR"}, nil
+	}
 
 	log.Printf("Received: %v", in.GetName())
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 
 func main() {
+	// SENTRY INSTALLATION
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
+	})
+
+	if err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
