@@ -1,6 +1,8 @@
-go get github.com/getsentry/sentry-go  
-git@github.com:grpc/grpc-go.git  
-https://github.com/grpc/grpc-go/tree/master/examples  
+## Documentation
+- https://docs.sentry.io/platforms/go/#install Sentry Go SDK
+- https://github.com/grpc/grpc-go
+- https://github.com/grpc/grpc-go/tree/master/examples  
+- https://github.com/sentry-demos/go-net-http/blob/master/main.go (rest api demo)
 
 ## Insturctions
 1. git clone git@github.com:thinkocapo/golang-grpc.git
