@@ -32,6 +32,8 @@ import (
 	"google.golang.org/grpc/codes"
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
 	"google.golang.org/grpc/status"
+
+	"github.com/getsentry/sentry-go"
 )
 
 var port = flag.Int("port", 50052, "port number")
@@ -61,12 +63,22 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 		if err != nil {
 			return nil, st.Err()
 		}
+		sentry.CaptureException(st.Err())
 		return nil, ds.Err()
 	}
 	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
 }
 
 func main() {
+	// SENTRY INSTALLATION
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
+	})
+
+	if err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
 	flag.Parse()
 
 	address := fmt.Sprintf(":%v", *port)
