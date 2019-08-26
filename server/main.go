@@ -64,7 +64,7 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 			return nil, st.Err()
 		}
 
-		log.Printf("%v", ds.Details())
+		log.Printf("%v", ds.Err())
 
 		sentry.ConfigureScope(func(scope *sentry.Scope) {
 			scope.SetExtra("Details", ds.Details())
@@ -79,9 +79,6 @@ func main() {
 	// SENTRY INSTALLATION
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
-		// BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {		
-		// 	return event
-		// },
 	})
 
 	if err != nil {
