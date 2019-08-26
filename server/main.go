@@ -63,7 +63,13 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 		if err != nil {
 			return nil, st.Err()
 		}
-		sentry.CaptureException(st.Err())
+
+		log.Printf("%v", ds.Details())
+
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetExtra("Details", ds.Details())
+		})
+		sentry.CaptureException(ds.Err())
 		return nil, ds.Err()
 	}
 	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
@@ -73,6 +79,9 @@ func main() {
 	// SENTRY INSTALLATION
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
+		// BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {		
+		// 	return event
+		// },
 	})
 
 	if err != nil {

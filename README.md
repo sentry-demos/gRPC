@@ -22,6 +22,11 @@ export GOPATH=$HOME/go
 5. check logs
 6. visit sentry.io to see your Event
 
+## RPC Errors
+https://grpc.io/docs/guides/error/  
+https://github.com/grpc/grpc-go/blob/master/Documentation/rpc-errors.md  
+https://godoc.org/google.golang.org/grpc/status#Status  
+
 ## Documentation  
 - Stuck running Go? [Note that this differs from other programming environments](https://golang.org/doc/code.html#Overview) in which every project has a separate workspace and workspaces are closely tied to version control repositories.
 - Note that GOPATH must not be the same path as your Go installation.
