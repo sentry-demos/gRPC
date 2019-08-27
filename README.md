@@ -2,19 +2,14 @@
 The handled error example is taken from https://github.com/grpc/grpc-go/tree/master/examples/features/errors  
 The unhandled error example is taken from https://github.com/grpc/grpc-go/tree/master/examples/helloworld
 ## Setup
-Recommended:  
-
-1. .bashrc
+This app makes use of packages (e.g. protocol buffers) in the gRPC Framework and its example applications. So if you don't have gRPC in your go workspace then run:
 ```
-export PATH=$PATH:/usr/local/go/bin
-export GOPATH=$HOME/go
+go get -u google.golang.org/grpc
 ```
-2. `cd` into `$HOME/go/github.com/your_username` or wherever your Go workspace and packages are, and clone repo into here
 
-Mandatory:
 1. `git clone git@github.com:thinkocapo/golang-grpc.git`
 2. `go get github.com/getsentry/sentry-go`  
-3. paste your Sentry key into server.go
+3. paste your Sentry key into `server/server.go`
 ```
 	// SENTRY INSTALLATION
 	err := sentry.Init(sentry.ClientOptions{
@@ -23,14 +18,14 @@ Mandatory:
 ```
 ## Run
 #### handled error:
-1. `go run server/main.go`
-2. `go run client/main.go`
+1. `go run server/server.go`
+2. `go run client/handled.go`
 3. check sentry.io to see your Event
 
 #### unhandled error:
 1. `go run server/server.go`
-2. `go run client/client.go`
-3. check sentry.io to see your Event
+2. `go run client/unhandled.go`
+2. check sentry.io to see your Event
 
 ## GIF
 handled RPC error  

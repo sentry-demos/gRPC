@@ -41,37 +41,34 @@ var port = flag.Int("port", 50052, "port number")
 // server is used to implement helloworld.GreeterServer.
 type server struct {
 	mu    sync.Mutex
-	count map[string]int
 }
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// Track the number of times the user has been greeted.
-	s.count[in.Name]++
-	if s.count[in.Name] > 1 {
-		st := status.New(codes.ResourceExhausted, "Request limit exceeded.")
-		ds, err := st.WithDetails(
-			&epb.QuotaFailure{
-				Violations: []*epb.QuotaFailure_Violation{{
-					Subject:     fmt.Sprintf("name:%s", in.Name),
-					Description: "Limit one greeting per person",
-				}},
-			},
-		)
-		if err != nil {
-			return nil, st.Err()
-		}
 
-		log.Printf("%v", ds.Err())
-
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetExtra("Details", ds.Details())
-		})
-		sentry.CaptureException(ds.Err())
-		return nil, ds.Err()
+	st := status.New(codes.ResourceExhausted, "Request limit exceeded.")
+	ds, err := st.WithDetails(
+		&epb.QuotaFailure{
+			Violations: []*epb.QuotaFailure_Violation{{
+				Subject:     fmt.Sprintf("name:%s", in.Name),
+				Description: "Limit one greeting per person",
+			}},
+		},
+	)
+	if err != nil {
+		return nil, st.Err()
 	}
+
+	log.Printf("%v", ds.Err())
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetExtra("Details", ds.Details())
+	})
+	sentry.CaptureException(ds.Err())
+	return nil, ds.Err()
+	// }
 	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
 }
 
@@ -94,7 +91,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{count: make(map[string]int)})
+	pb.RegisterGreeterServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
