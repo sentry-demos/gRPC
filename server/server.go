@@ -45,7 +45,7 @@ type server struct{}
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	
 	// SENTRY
-	_, err := os.Open("fakefile.ext")
+	_, err := os.Open("badfile.ext")
 	if err != nil {
 		log.Printf("ERROR handled")
 		sentry.CaptureException(err)
