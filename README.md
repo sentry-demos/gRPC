@@ -1,5 +1,6 @@
 # Golang gRPC & sentry-go Demo
-
+The handled error example is taken from https://github.com/grpc/grpc-go/tree/master/examples/features/errors  
+The unhandled error example is taken from https://github.com/grpc/grpc-go/tree/master/examples/helloworld
 ## Setup
 Recommended:  
 
