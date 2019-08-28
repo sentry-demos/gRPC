@@ -30,11 +30,22 @@ import (
 	"google.golang.org/grpc"
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
 	"google.golang.org/grpc/status"
+
+	"github.com/getsentry/sentry-go"
 )
 
 var addr = flag.String("addr", "localhost:50052", "the address to connect to")
 
 func main() {
+	// SENTRY INSTALLATION
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
+	})
+
+	if err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
 	flag.Parse()
 
 	// Set up a connection to the server.
@@ -57,6 +68,7 @@ func main() {
 		for _, d := range s.Details() {
 			switch info := d.(type) {
 			case *epb.QuotaFailure:
+				sentry.CaptureException(info)
 				log.Printf("Quota failure: %s", info)
 			default:
 				log.Printf("Unexpected type: %s", info)
