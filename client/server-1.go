@@ -22,6 +22,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -46,6 +47,8 @@ func main() {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
 
+	sentry.CaptureMessage("MY MESSAGE")
+
 	flag.Parse()
 
 	// Set up a connection to the server.
@@ -68,7 +71,8 @@ func main() {
 		for _, d := range s.Details() {
 			switch info := d.(type) {
 			case *epb.QuotaFailure:
-				sentry.CaptureException(info)
+				log.Printf("SENTRY...")
+				sentry.CaptureException(err) // s.Err()
 				log.Printf("Quota failure: %s", info)
 			default:
 				log.Printf("Unexpected type: %s", info)
