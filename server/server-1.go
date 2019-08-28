@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015 gRPC authors.
+ * Copyright 2018 gRPC authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,48 +16,63 @@
  *
  */
 
-//go:generate protoc -I ../helloworld --go_out=plugins=grpc:../helloworld ../helloworld/helloworld.proto
-
-// Package main implements a server for Greeter service.
+// Binary server is an example server.
 package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"net"
-	"os"
-	"fmt"
+	"sync"
 
+	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
-	"github.com/getsentry/sentry-go"
-
+	"google.golang.org/grpc/codes"
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	"google.golang.org/grpc/status"
+
+	"github.com/getsentry/sentry-go"
 )
 
-const (
-	port = ":50051"
-)
+var port = flag.Int("port", 50052, "port number")
 
 // server is used to implement helloworld.GreeterServer.
-type server struct{}
+type server struct {
+	mu    sync.Mutex
+}
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	
-	// SENTRY
-	_, err := os.Open("badfile.ext")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	st := status.New(codes.ResourceExhausted, "Request limit exceeded.")
+	ds, err := st.WithDetails(
+		&epb.QuotaFailure{
+			Violations: []*epb.QuotaFailure_Violation{{
+				Subject:     fmt.Sprintf("name:%s", in.Name),
+				Description: "Limit one greeting per person",
+			}},
+		},
+	)
 	if err != nil {
-		log.Printf("ERROR handled")
-		sentry.CaptureException(err)
-		return &pb.HelloReply{Message: "Server ERROR"}, nil
+		return nil, st.Err()
 	}
 
-	log.Printf("Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+	log.Printf("%v", ds.Err())
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetExtra("Details", ds.Details())
+	})
+	sentry.CaptureException(ds.Err()) // or st.Err()?
+	return nil, ds.Err()
+	// }
+	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
 }
 
 func main() {
-	
 	// SENTRY INSTALLATION
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
@@ -67,11 +82,14 @@ func main() {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
 
+	flag.Parse()
 
-	lis, err := net.Listen("tcp", port)
+	address := fmt.Sprintf(":%v", *port)
+	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	s := grpc.NewServer()
 	pb.RegisterGreeterServer(s, &server{})
 	if err := s.Serve(lis); err != nil {

@@ -8,7 +8,7 @@ go get -u google.golang.org/grpc
 ```
 
 1. `git clone git@github.com:thinkocapo/golang-grpc.git`
-2. `go get github.com/getsentry/sentry-go`  
+2. `go get github.com/getsentry/sentry-go` 
 3. paste your Sentry key into `server/server.go`
 ```
 	// SENTRY INSTALLATION
@@ -17,15 +17,11 @@ go get -u google.golang.org/grpc
 	})
 ```
 ## Run
-#### handled error:
 1. `go run server/server.go`
 2. `go run client/handled.go`
-3. check sentry.io to see your Event
-
-#### unhandled error:
-1. `go run server/server.go`
-2. `go run client/unhandled.go`
-2. check sentry.io to see your Event
+or
+3. `go run client/unhandled.go`
+4. check sentry.io to see your Event
 
 ## GIF
 handled RPC error  
