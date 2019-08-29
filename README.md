@@ -1,6 +1,5 @@
 # Golang gRPC & sentry-go Demo
-The handled error example is taken from https://github.com/grpc/grpc-go/tree/master/examples/features/errors  
-The unhandled error example is taken from https://github.com/grpc/grpc-go/tree/master/examples/helloworld
+The example code in this repo is taken from https://github.com/grpc/grpc-go/tree/master/examples/features/errors  
 ## Setup
 This app makes use of packages (e.g. protocol buffers) in the gRPC Framework and its example applications. So if you don't have gRPC in your go workspace then run:
 ```
@@ -18,16 +17,12 @@ go get -u google.golang.org/grpc
 ```
 ## Run
 1. `go run server/server.go`
-2. `go run client/handled.go`
-or
-3. `go run client/unhandled.go`
-4. check sentry.io to see your Event
+2. `go run client/client.go`
+3. check sentry.io to see your Event
 
 ## GIF
-handled RPC error  
-![Alt Text](go-grpc-handled.gif)  
-unhandled error  
-![Alt Text](go-grpc-unhandled.gif)
+handled gRPC error  
+![Alt Text](go-grpc-final.gif)
 
 ## Documentation  
 - https://grpc.io/docs/guides/error/  

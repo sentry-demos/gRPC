@@ -48,6 +48,7 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// ERROR
 	st := status.New(codes.ResourceExhausted, "Request limit exceeded.")
 	ds, err := st.WithDetails(
 		&epb.QuotaFailure{
@@ -58,17 +59,20 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 		},
 	)
 	if err != nil {
-		return nil, st.Err()
+		log.Fatalf("%v", err)
+	}
+	if ds != nil {
+		log.Printf("%v", ds.Err())
+		
+		// SENTRY
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetExtra("Details", ds.Details())
+		})
+		sentry.CaptureException(ds.Err())
+		
+		return nil, ds.Err()
 	}
 
-	log.Printf("%v", ds.Err())
-
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetExtra("Details", ds.Details())
-	})
-	sentry.CaptureException(ds.Err())
-	return nil, ds.Err()
-	// }
 	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
 }
 
