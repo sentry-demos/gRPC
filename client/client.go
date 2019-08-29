@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015 gRPC authors.
+ * Copyright 2018 gRPC authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,44 +16,67 @@
  *
  */
 
-// Package main implements a client for Greeter service.
+// Binary client is an example client.
 package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	"google.golang.org/grpc/status"
+
+	"github.com/getsentry/sentry-go"
 )
 
-const (
-	address     = "localhost:50051"
-	defaultName = "world"
-)
+var addr = flag.String("addr", "localhost:50052", "the address to connect to")
 
 func main() {
+	// SENTRY INSTALLATION
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
+	})
+
+	if err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
+	sentry.CaptureMessage("MY MESSAGE")
+
+	flag.Parse()
+
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	conn, err := grpc.Dial(*addr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer conn.Close()
+	defer func() {
+		if e := conn.Close(); e != nil {
+			log.Printf("failed to close connection: %s", e)
+		}
+	}()
 	c := pb.NewGreeterClient(conn)
 
-	// Contact the server and print out its response.
-	name := defaultName
-	if len(os.Args) > 1 {
-		name = os.Args[1]
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: name})
+	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: "world"})
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		s := status.Convert(err)
+		for _, d := range s.Details() {
+			switch info := d.(type) {
+			case *epb.QuotaFailure:
+				log.Printf("Quota failure: %s", info)
+			default:
+				log.Printf("Unexpected type: %s", info)
+			}
+		}
+		os.Exit(1)
 	}
-	log.Printf(r.GetMessage())
-	// log.Printf("Greeting: %s", r.GetMessage())
+	log.Printf("Greeting: %s", r.Message)
 }
