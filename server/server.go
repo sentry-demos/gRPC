@@ -65,10 +65,10 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 		log.Printf("%v", ds.Err())
 		
 		// SENTRY
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
+		sentry.WithScope(func(scope *sentry.Scope) {
 			scope.SetExtra("Details", ds.Details())
+			sentry.CaptureException(ds.Err())
 		})
-		sentry.CaptureException(ds.Err())
 		
 		return nil, ds.Err()
 	}
@@ -80,9 +80,7 @@ func main() {
 	// SENTRY INSTALLATION
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://a4efaa11ca764dd8a91d790c0926f810@sentry.io/1511084",
-	})
-
-	if err != nil {
+	}); if err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
 
